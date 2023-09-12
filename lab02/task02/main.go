@@ -36,30 +36,36 @@ func BiasedSampleVariance(elems []float64) float64 {
 	return sum / float64(len(elems))
 }
 
-func test() {
-	elems := []float64{3, 7, 1, 9, -2, 8, 5}
-	unbiasedSampleVariance := UnbiasedSampleVariance(elems)
-	fmt.Println(unbiasedSampleVariance) //15.95
-}
+//func test() {
+//	elems := []float64{3, 7, 1, 9, -2, 8, 5}
+//	unbiasedSampleVariance := UnbiasedSampleVariance(elems)
+//	fmt.Println(unbiasedSampleVariance) //15.95
+//}
 
-func ParallelUnbiasedSampleVariance(elems []float64, n int) {
-	elemGroups := ElemsToGroups(elems, n)
-	unbiasedSampleVariances := make([]float64, 0, n)
+func ParallelBiasedSampleVariance(elems []float64, n int) {
+	groups := ElemsToGroups(elems, n)
+	biasedSampleVariances := make([]float64, 0, n)
+	var sum float64
+	var mu sync.Mutex
 
 	var wg sync.WaitGroup
 	wg.Add(n)
 
-	for _, group := range elemGroups {
+	for _, group := range groups {
 		group := group
 		go func() {
 			defer wg.Done()
-			unbiasedSampleVariances = append(unbiasedSampleVariances, BiasedSampleVariance(group))
+			bsv := BiasedSampleVariance(group)
+			biasedSampleVariances = append(biasedSampleVariances, bsv)
+			mu.Lock()
+			defer mu.Unlock()
+			sum += bsv / float64(len(group))
 		}()
 	}
 
 	wg.Wait()
 
-	a := SampleAverage(unbiasedSampleVariances) + BiasedSampleVariance(unbiasedSampleVariances)*float64(len(elems))/float64(len(elems)+3000)
+	a := SampleAverage(biasedSampleVariances) + BiasedSampleVariance(biasedSampleVariances)*float64(len(elems))/float64(len(elems)+3000)
 	fmt.Println("Парал", a)
 }
 
@@ -89,9 +95,9 @@ func main() {
 	fmt.Println(unbiasedSampleVariance)
 	fmt.Println(biasedSampleVariance)
 
-	ParallelUnbiasedSampleVariance(elems, 8)
+	ParallelBiasedSampleVariance(elems, 8)
 
 }
 
 // общая дисперсия равна сумме средней из внутригрупповых и межгрупповой дисперсий
-// https://einsteins.ru/subjects/statistika/teoriya-statistika/dispersiya
+// http://mathprofi.ru/dispersii.html
