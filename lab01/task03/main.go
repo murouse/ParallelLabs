@@ -27,7 +27,7 @@ func NormalPDF(x float64, mu float64, sigma float64) float64 {
 
 func main() {
 	n := 25
-	h := 10000000
+	h := 10_000_000
 	prob := 0.35
 
 	valuesBinomial := make(plotter.Values, n+1)

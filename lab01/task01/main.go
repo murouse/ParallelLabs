@@ -69,7 +69,7 @@ func main() {
 		return point.y+point.x < 5/2.0*a && point.x*point.y > a*a
 	}
 
-	points := GeneratePoints(10000)
+	points := GeneratePoints(10_000)
 	inside, outside := MarkPoints(points, areaFunc)
 	SavePlot(inside, outside, "lab01/task01/plot1.png")
 

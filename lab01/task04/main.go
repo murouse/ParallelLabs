@@ -20,7 +20,7 @@ import (
 //}
 
 func main() {
-	h := 100000
+	h := 100_000
 	m := make(map[int]int)
 	p := distuv.Poisson{Lambda: 10}
 
