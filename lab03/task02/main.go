@@ -32,7 +32,7 @@ func main() {
 		p := plot.New()
 		bars, _ := plotter.NewBarChart(toValues(x), 1)
 		p.Add(bars)
-		err := p.Save(500, 500, fmt.Sprintf("lab03/task02/plots/plot%d.png", n))
+		err := p.Save(2000, 500, fmt.Sprintf("lab03/task02/plots/plot%d.png", n))
 		if err != nil {
 			panic(err)
 		}
