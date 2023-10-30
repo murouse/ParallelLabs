@@ -4,7 +4,7 @@ go 1.21
 
 require (
 	github.com/schollz/progressbar/v3 v3.13.1
-	github.com/stretchr/testify v1.3.0
+	github.com/stretchr/testify v1.4.0
 	gonum.org/v1/gonum v0.14.0
 	gonum.org/v1/plot v0.14.0
 )
@@ -22,6 +22,7 @@ require (
 	github.com/mitchellh/colorstring v0.0.0-20190213212951-d06e56a500db // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/rivo/uniseg v0.2.0 // indirect
+	github.com/thoas/go-funk v0.9.3 // indirect
 	golang.org/x/exp v0.0.0-20230905200255-921286631fa9 // indirect
 	golang.org/x/image v0.12.0 // indirect
 	golang.org/x/sys v0.12.0 // indirect

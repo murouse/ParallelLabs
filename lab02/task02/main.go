@@ -9,7 +9,7 @@ import (
 
 func main() {
 	//test()
-	elems := utils.GenerateElems(100_000_000)
+	elems := utils.GenerateElems(10_000_000)
 
 	t1 := time.Now()
 	unbiasedSampleVariance := utils.UnbiasedSampleVariance(elems)

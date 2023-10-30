@@ -35,7 +35,7 @@ func KissPlus(n int, seed [4]uint64) ([]uint64, float64, float64) {
 }
 
 func main() {
-	for _, n := range []int{100_000_000, 1_000_000_000} {
+	for _, n := range []int{10_000_000, 100_000_000} {
 		x, saf, usvf := KissPlus(n, [4]uint64{rand.Uint64(), rand.Uint64(), rand.Uint64(), rand.Uint64()})
 
 		xf := make([]float64, len(x))

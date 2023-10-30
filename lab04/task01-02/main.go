@@ -105,11 +105,12 @@ func KissStatParallel(n int, threads int, seeds [][4]uint64) ([]uint64, float64,
 
 	x := make([]uint64, n)
 	wg := new(sync.WaitGroup)
-	mu := new(sync.Mutex)
 	wg.Add(threads)
 	h := n / threads
-	var sa, usv float64
-	var num uint64
+
+	sas := make([]float64, threads)  // средние групп
+	usvs := make([]float64, threads) // дисперсии групп
+	ns := make([]int, threads)       // размеры групп
 
 	for i := 0; i < threads; i++ {
 		i := i
@@ -124,7 +125,11 @@ func KissStatParallel(n int, threads int, seeds [][4]uint64) ([]uint64, float64,
 			} else {
 				stop = n
 			}
+			ns[i] = stop - start
+
 			var t uint64
+
+			num := 0
 
 			for j := start; j < stop; j++ {
 				seed0 = 69069*seed0 + 123456
@@ -134,33 +139,43 @@ func KissStatParallel(n int, threads int, seeds [][4]uint64) ([]uint64, float64,
 				t = 698769069*seed2 + seed3
 				seed3 = t >> 32
 				seed1 = t
-				elem := seed0 + seed1 + seed2
-				x[j] = elem
+				x[j] = seed0 + seed1 + seed2
 
-				mu.Lock()
-				nowNum := num
-				num += 1
-				mu.Unlock()
-
-				if nowNum != 0 {
-					usv += math.Pow(float64(elem)-sa, 2)/float64(nowNum+1) - usv/float64(nowNum)
+				if num != 0 {
+					usvs[i] += math.Pow(float64(x[j])-sas[i], 2)/float64(num+1) - usvs[i]/float64(num)
 				}
-				sa += (float64(elem) - sa) / float64(nowNum+1)
+				sas[i] += (float64(x[j]) - sas[i]) / float64(num+1)
 
+				num += 1
 			}
 		}()
 	}
 
 	wg.Wait()
+
+	var sa float64 // общее среднее
+	for i := 0; i < threads; i++ {
+		sa += sas[i] * float64(ns[i])
+	}
+	sa /= float64(n)
+
+	var intra float64 // внутригрупповая дисперсия
+	var inter float64 // межгрупповая дисперсия
+	for i := 0; i < threads; i++ {
+		intra += usvs[i] * float64(ns[i])
+		inter += math.Pow(sas[i]-sa, 2) * float64(ns[i])
+	}
+	usv := (intra + inter) / float64(n) // общая дисперсия
+
 	return x, sa, usv
 }
 
 func main() {
-	n := 8
+	threads := 8
 
 	// autofill
 	var seeds [][4]uint64
-	for i := 0; i < n; i++ {
+	for i := 0; i < threads; i++ {
 		seeds = append(seeds, [4]uint64{rand.Uint64(), rand.Uint64(), rand.Uint64(), rand.Uint64()})
 	}
 
@@ -176,14 +191,13 @@ func main() {
 	//	{29, 30, 31, 32},
 	//}
 
-	//count := 1_000_000_001
-	//count := 100000000
-	count := 10_000_000
+	count := 10_000_0000
 
+	var sa, usv float64
 	const h = 2
 	var sum time.Duration
 
-	// однопоточный
+	fmt.Println("ОДНОПОТОЧНЫЙ")
 	sum = time.Duration(0)
 	for i := 0; i < h; i++ {
 		runtime.GC()
@@ -192,38 +206,43 @@ func main() {
 		t2 := time.Now()
 		sum += t2.Sub(t1)
 	}
-	fmt.Println(sum / time.Duration(h))
+	fmt.Printf("время: %s\n\n", sum/time.Duration(h))
 
-	// однопоточный со статистикой
+	fmt.Println("ОДНОПОТОЧНЫЙ СО СТАТИСТИКОЙ")
 	sum = time.Duration(0)
 	for i := 0; i < h; i++ {
 		runtime.GC()
 		t1 := time.Now()
-		_, _, _ = KissStat(count, seeds[0])
+		_, sa, usv = KissStat(count, seeds[0])
 		t2 := time.Now()
 		sum += t2.Sub(t1)
 	}
-	fmt.Println(sum / time.Duration(h))
+	fmt.Printf("время: %s\n", sum/time.Duration(h))
+	fmt.Printf("среднее: %v\n", sa)
+	fmt.Printf("дисперсия: %v\n\n", usv)
 
-	// многопоточный
+	fmt.Println("МНОГОПОТОЧНЫЙ")
 	sum = time.Duration(0)
 	for i := 0; i < h; i++ {
 		runtime.GC()
 		t1 := time.Now()
-		_ = KissParallel(count, n, seeds)
+		_ = KissParallel(count, threads, seeds)
 		t2 := time.Now()
 		sum += t2.Sub(t1)
 	}
-	fmt.Println(sum / time.Duration(h))
+	fmt.Printf("время: %s\n\n", sum/time.Duration(h))
 
-	// многопоточный со статистикой
+	fmt.Println("МНОГОПОТОЧНЫЙ СО СТАТИСТИКОЙ")
 	sum = time.Duration(0)
 	for i := 0; i < h; i++ {
 		runtime.GC()
 		t1 := time.Now()
-		_, _, _ = KissStatParallel(count, n, seeds)
+		_, sa, usv = KissStatParallel(count, threads, seeds)
 		t2 := time.Now()
 		sum += t2.Sub(t1)
 	}
-	fmt.Println(sum / time.Duration(h))
+	fmt.Printf("время: %s\n", sum/time.Duration(h))
+	fmt.Printf("среднее: %v\n", sa)
+	fmt.Printf("дисперсия: %v\n\n", usv)
+
 }

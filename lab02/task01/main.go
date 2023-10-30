@@ -40,7 +40,7 @@ func main() {
 				ends[i] = time.Now()
 			}()
 			log.Printf("(!) Горутина '%d' запустилась", i+1)
-			time.Sleep(time.Duration(i) * time.Second)
+			time.Sleep(time.Duration(i+1) * time.Second)
 			log.Printf("(?) Горутина '%d' завершилась", i+1)
 		}()
 	}
